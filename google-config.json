@@ -1,0 +1,5 @@
+{
+  "_comment": "Identifiants OAuth Google (type Application de bureau). Pour un client Desktop, ces valeurs ne sont pas confidentielles (Google les fait embarquer dans l'app). Laissez vide pour masquer le bouton Google.",
+  "clientId": "385138134426-38a6nk1ak22984hheflt78itg8u12ndh.apps.googleusercontent.com",
+  "clientSecret": "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"
+}

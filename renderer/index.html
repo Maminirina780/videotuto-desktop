@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Politique de sécurité du contenu : rien d'externe ne s'exécute. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline';
+                 img-src 'self' data:; media-src 'self' vtmedia: https:; font-src 'self';
+                 connect-src 'self'; base-uri 'none'; form-action 'none'" />
+  <title>VideoTuto</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <!-- ═══════════ CONNEXION ═══════════ -->
+  <section id="loginView" class="view login">
+    <div class="login-card">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 108 108" fill="none"><path fill="#fff" fill-rule="evenodd"
+            d="M35 53V35a3 3 0 0 1 3-3h32a3 3 0 0 1 3 3v18c0 13.8-7.8 23-19 27.5C42.8 76 35 66.8 35 53Zm14-6.5v14c0 2 0 2 1.68.92l10.64-6.84c1.68-1.08 1.68-1.08 0-2.16L50.68 45.58C49 44.5 49 44.5 49 46.5Z"/></svg>
+        </span>
+        <div>
+          <h1>VideoTuto</h1>
+          <p class="muted">Connectez-vous pour accéder à vos tutoriels</p>
+        </div>
+      </div>
+      <form id="loginForm" autocomplete="off">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="vous@exemple.com" required />
+        <label for="password">Mot de passe</label>
+        <input id="password" type="password" placeholder="••••••••" required />
+        <div class="err" id="loginErr"></div>
+        <button class="btn" id="loginBtn" type="submit">Se connecter</button>
+      </form>
+      <div class="or-sep" id="googleWrap" hidden><span>ou</span></div>
+      <button class="btn google" id="googleBtn" hidden>
+        <svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 3.1 29.6 1 24 1 11.8 1 2 10.8 2 23s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M3.2 13.9l6.6 4.8C11.5 15 17.3 11 24 11c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 3.1 29.6 1 24 1 15.9 1 8.8 5.6 3.2 13.9z"/><path fill="#4CAF50" d="M24 45c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.9 26.7 37 24 37c-5.3 0-9.7-2.6-11.3-6.9l-6.5 5C9.7 40.4 16.3 45 24 45z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.3 5.3C41.4 36.9 45 31 45 23c0-1.3-.1-2.3-.4-3.5z"/></svg>
+        Continuer avec Google
+      </button>
+      <p class="footnote">🔒 Vos vidéos sont chiffrées et protégées contre la copie.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ BIBLIOTHÈQUE ═══════════ -->
+  <section id="libraryView" class="view" hidden>
+    <header class="topbar">
+      <span class="logo sm" aria-hidden="true">
+        <svg viewBox="0 0 108 108" fill="none"><path fill="#fff" fill-rule="evenodd"
+          d="M35 53V35a3 3 0 0 1 3-3h32a3 3 0 0 1 3 3v18c0 13.8-7.8 23-19 27.5C42.8 76 35 66.8 35 53Zm14-6.5v14c0 2 0 2 1.68.92l10.64-6.84c1.68-1.08 1.68-1.08 0-2.16L50.68 45.58C49 44.5 49 44.5 49 46.5Z"/></svg>
+      </span>
+      <h2>Mes tutoriels</h2>
+      <span class="secure-badge" title="Fenêtre protégée : capture d'écran et enregistrement bloqués">🔒 Protégé</span>
+      <span class="spacer"></span>
+      <span class="muted small" id="whoami"></span>
+      <button class="btn ghost small" id="refreshBtn">Actualiser</button>
+      <button class="btn ghost small" id="updateBtn">Mise à jour</button>
+      <button class="btn ghost small" id="logoutBtn">Déconnexion</button>
+    </header>
+
+    <nav class="tabs" id="tabs" hidden>
+      <button class="tab on" data-tab="videos">Vidéos</button>
+      <button class="tab" data-tab="images" id="tabImages" hidden>Images</button>
+      <button class="tab" data-tab="folders" id="tabFolders" hidden>Dossiers</button>
+    </nav>
+
+    <!-- Onglet Vidéos -->
+    <div class="panel" id="panel-videos">
+      <div class="library" id="library"></div>
+      <div class="empty" id="libraryEmpty" hidden>
+        Aucune vidéo pour le moment. Vos tutoriels apparaîtront ici.
+      </div>
+    </div>
+
+    <!-- Onglet Images -->
+    <div class="panel" id="panel-images" hidden>
+      <div class="library" id="imagesGrid"></div>
+      <div class="empty" id="imagesEmpty" hidden>Aucune image partagée pour le moment.</div>
+    </div>
+
+    <!-- Onglet Dossiers -->
+    <div class="panel" id="panel-folders" hidden>
+      <div class="folders-list" id="foldersList"></div>
+      <div class="empty" id="foldersEmpty" hidden>Aucun dossier partagé pour le moment.</div>
+      <div id="folderContent" hidden>
+        <div class="folder-head">
+          <button class="btn ghost small" id="folderBack">‹ Dossiers</button>
+          <span class="folder-name" id="folderName"></span>
+        </div>
+        <div class="library" id="folderItems"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ LECTEUR ═══════════ -->
+  <section id="playerView" class="view player" hidden>
+    <div class="player-top">
+      <button class="btn ghost small" id="backBtn">‹ Retour</button>
+      <span class="player-title" id="playerTitle"></span>
+      <span class="player-countdown" id="playerCountdown" hidden aria-live="polite">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0 0 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+        <span id="playerCountdownText">00:00</span>
+      </span>
+      <span class="secure-badge">🔒 Protégé</span>
+    </div>
+    <div class="player-stage">
+      <video id="video" controls controlsList="nodownload noplaybackrate"
+             disablepictureinpicture playsinline></video>
+      <div class="player-msg" id="playerMsg" hidden></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ VISIONNEUSE D'IMAGE ═══════════ -->
+  <section id="imageViewerView" class="view player" hidden>
+    <div class="player-top">
+      <button class="btn ghost small" id="imgBack">‹ Retour</button>
+      <span class="player-title" id="imgTitle"></span>
+      <span class="secure-badge">🔒 Protégé</span>
+    </div>
+    <div class="player-stage">
+      <img id="imageEl" alt="" style="max-width:96vw;max-height:88vh;object-fit:contain;border-radius:6px">
+      <div class="player-msg" id="imgMsg" hidden></div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

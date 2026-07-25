@@ -1,0 +1,44 @@
+name: Build macOS (VideoTuto)
+
+# Compile l'app de bureau pour macOS (Intel + Apple Silicon) sur un runner
+# macOS GRATUIT de GitHub. Aucune signature Apple (pas de compte payant) :
+# l'app n'est pas notarisée, les utilisateurs devront l'autoriser au 1er
+# lancement (voir BUILD-MAC.md). Le .dmg produit est téléchargeable en tant
+# qu'« artifact » de l'exécution.
+
+on:
+  workflow_dispatch: {}      # bouton « Run workflow » (manuel)
+  push:
+    tags: ["v*"]             # ou automatiquement sur un tag v1.0.3, etc.
+
+jobs:
+  build-mac:
+    runs-on: macos-latest    # runner Apple Silicon (gratuit)
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Construire le .dmg (non signé)
+        run: npx electron-builder --mac --publish never
+        env:
+          # Désactive la recherche/apposition d'un certificat Apple : build
+          # non signé, entièrement gratuit.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Publier les artefacts (.dmg / .zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: VideoTuto-macOS
+          path: |
+            release/*.dmg
+            release/*.zip
+          if-no-files-found: error

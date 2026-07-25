@@ -1,0 +1,57 @@
+{
+  "name": "videotuto-desktop",
+  "productName": "VideoTuto",
+  "version": "1.0.2",
+  "description": "Client de bureau sécurisé pour VideoTuto (lecture protégée, téléchargements chiffrés).",
+  "author": "VideoTuto",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64",
+    "dist:mac": "electron-builder --mac",
+    "dist:dir": "electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.vmp.videotuto.desktop",
+    "productName": "VideoTuto",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "google-config.json",
+      "!**/*.map"
+    ],
+    "directories": { "output": "release" },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "VideoTuto"
+    },
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ],
+      "category": "public.app-category.education",
+      "darkModeSupport": true,
+      "identity": null
+    },
+    "dmg": {
+      "title": "VideoTuto ${version}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.0",
+    "electron-builder": "^24.13.3"
+  }
+}
