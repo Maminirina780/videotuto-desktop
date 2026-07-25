@@ -44,7 +44,8 @@
       ],
       "category": "public.app-category.education",
       "darkModeSupport": true,
-      "identity": null
+      "identity": null,
+      "artifactName": "VideoTuto-mac-${arch}.${ext}"
     },
     "dmg": {
       "title": "VideoTuto ${version}"

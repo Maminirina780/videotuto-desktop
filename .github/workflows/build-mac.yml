@@ -1,15 +1,21 @@
-name: Build macOS (VideoTuto)
+name: Build & Release macOS (VideoTuto)
 
 # Compile l'app de bureau pour macOS (Intel + Apple Silicon) sur un runner
-# macOS GRATUIT de GitHub. Aucune signature Apple (pas de compte payant) :
-# l'app n'est pas notarisée, les utilisateurs devront l'autoriser au 1er
-# lancement (voir BUILD-MAC.md). Le .dmg produit est téléchargeable en tant
-# qu'« artifact » de l'exécution.
+# macOS GRATUIT de GitHub, puis — sur un tag « v* » — publie une Release GitHub
+# avec les .dmg. La page de téléchargement pointe sur cette Release, donc les
+# boutons Mac s'activent tout seuls dès la 1re Release publiée.
+#
+# Aucune signature Apple (pas de compte payant) : l'app n'est pas notarisée,
+# l'utilisateur l'autorise au 1er lancement (voir BUILD-MAC.md).
 
 on:
-  workflow_dispatch: {}      # bouton « Run workflow » (manuel)
+  workflow_dispatch: {}      # bouton « Run workflow » (test manuel, sans Release)
   push:
-    tags: ["v*"]             # ou automatiquement sur un tag v1.0.3, etc.
+    tags: ["v*"]             # un tag v1.0.3 → build + Release automatique
+
+# Nécessaire pour que le job puisse créer la Release avec le token intégré.
+permissions:
+  contents: write
 
 jobs:
   build-mac:
@@ -27,14 +33,13 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
-      - name: Construire le .dmg (non signé)
+      - name: Construire les .dmg (non signés)
         run: npx electron-builder --mac --publish never
         env:
-          # Désactive la recherche/apposition d'un certificat Apple : build
-          # non signé, entièrement gratuit.
+          # Build entièrement gratuit : pas de recherche de certificat Apple.
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
-      - name: Publier les artefacts (.dmg / .zip)
+      - name: Publier les artefacts (téléchargeables depuis l'exécution)
         uses: actions/upload-artifact@v4
         with:
           name: VideoTuto-macOS
@@ -42,3 +47,13 @@ jobs:
             release/*.dmg
             release/*.zip
           if-no-files-found: error
+
+      - name: Publier la Release GitHub (uniquement sur un tag v*)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/*.dmg
+            release/*.zip
+          fail_on_unmatched_files: true
+          generate_release_notes: true
