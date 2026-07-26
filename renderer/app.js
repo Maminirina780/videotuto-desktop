@@ -35,11 +35,20 @@
         { imageKey: "images/1784000000001-photo-4k.jpg", title: "Photo 4k", expiresAt: Date.now() + 3 * 3600 * 1000 },
       ] }),
       imageSource: async () => ({ ok: true, src: "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='400' height='250'><rect width='400' height='250' fill='#0A84FF'/><text x='200' y='130' fill='#fff' font-size='22' text-anchor='middle'>Aperçu</text></svg>") }),
-      assistant: async (msg) => ({
+      assistant: async () => ({
         ok: true,
         reply:
-          "Vous avez 4 vidéos accessibles. Pour « Accès minuté », il reste 5 min " +
-          "à la lecture. (Aperçu : réponse simulée à « " + msg + " ».)",
+          "Vous avez **4 vidéos** accessibles, dont **1 qui expire bientôt**.\n\n" +
+          "| Vidéo | État | Temps restant |\n|---|---|---|\n" +
+          "| Html1 | 🟢 Permanent | — |\n" +
+          "| Css bases | 🟡 En cours | 1 j 22 h |\n" +
+          "| Terminal | 🔴 Expire bientôt | 45 min |\n" +
+          "| Accès minuté | 🔵 Démarre à la lecture | 5 min accordées |\n\n" +
+          "Pensez à regarder *Terminal* en priorité.",
+        videos: [
+          { title: "Css bases", status: "active", remainingMs: 165600000, remainingLabel: "1 j 22 h" },
+          { title: "Terminal", status: "expiring", remainingMs: 2700000, remainingLabel: "45 min" },
+        ],
       }),
       listFolders: async () => ({ ok: true, folders: [{ id: "f1", name: "Cours HTML", expiresAt: null }] }),
       folderContent: async () => ({ ok: true,
@@ -439,13 +448,120 @@
     "Posez vos questions en français ou en malgache : « combien de vidéos ai-je ? », " +
     "« combien de temps me reste-t-il ? »…";
 
-  function addMsg(text, kind) {
+  // ── Rendu Markdown minimal et SÛR ──
+  // L'assistant répond en Markdown (tableaux, gras, listes). On échappe
+  // D'ABORD tout le HTML (le texte vient d'une IA : jamais de confiance
+  // aveugle), puis on ne réintroduit que nos propres balises de mise en forme.
+  function mdInline(s) {
+    return esc(s)
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
+      .replace(/`([^`]+)`/g, "<code>$1</code>");
+  }
+
+  function renderMarkdown(src) {
+    const lines = String(src || "").replace(/\r/g, "").split("\n");
+    let html = "", list = null, i = 0;
+
+    const closeList = () => { if (list) { html += "</" + list + ">"; list = null; } };
+    const isTableSep = (l) => /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/.test(l) && l.includes("-");
+    const cells = (l) => l.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim());
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // Tableau : ligne d'en-tête + ligne de séparation + lignes de données
+      if (line.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {
+        closeList();
+        const head = cells(line);
+        i += 2;
+        let body = "";
+        while (i < lines.length && lines[i].includes("|")) {
+          body += "<tr>" + cells(lines[i]).map((c) => "<td>" + mdInline(c) + "</td>").join("") + "</tr>";
+          i++;
+        }
+        html +=
+          '<div class="tbl-wrap"><table class="md-tbl"><thead><tr>' +
+          head.map((h) => "<th>" + mdInline(h) + "</th>").join("") +
+          "</tr></thead><tbody>" + body + "</tbody></table></div>";
+        continue;
+      }
+
+      // Titre
+      const h = line.match(/^(#{1,3})\s+(.*)$/);
+      if (h) { closeList(); html += "<h4>" + mdInline(h[2]) + "</h4>"; i++; continue; }
+
+      // Listes (à puces ou numérotées)
+      const li = line.match(/^\s*([-*•]|\d+\.)\s+(.*)$/);
+      if (li) {
+        const want = /\d/.test(li[1]) ? "ol" : "ul";
+        if (list !== want) { closeList(); html += "<" + want + ">"; list = want; }
+        html += "<li>" + mdInline(li[2]) + "</li>";
+        i++; continue;
+      }
+
+      closeList();
+      if (line.trim() === "") html += "";
+      else html += "<p>" + mdInline(line) + "</p>";
+      i++;
+    }
+    closeList();
+    return html;
+  }
+
+  function addMsg(text, kind, asMarkdown) {
     const div = document.createElement("div");
     div.className = "msg " + kind;
-    div.textContent = text;
+    if (asMarkdown) div.innerHTML = renderMarkdown(text);
+    else div.textContent = text;
     $("chatLog").appendChild(div);
     $("chatLog").scrollTop = $("chatLog").scrollHeight;
     return div;
+  }
+
+  // ── Graphique « temps restant » (SVG, construit côté app) ──
+  // Barres horizontales : lisibles sur petite largeur, et chaque barre porte
+  // son libellé exact (pas besoin de survol). Couleur = état, MAIS l'état est
+  // aussi écrit en toutes lettres (jamais la couleur seule comme information).
+  const STATUS = {
+    permanent: { color: "var(--green)", label: "Permanent" },
+    active: { color: "var(--accent)", label: "En cours" },
+    expiring: { color: "var(--red)", label: "Expire bientôt" },
+    pending: { color: "var(--orange)", label: "Démarre à la lecture" },
+    expired: { color: "var(--label3)", label: "Expiré" },
+  };
+
+  function renderChart(videos) {
+    const timed = (videos || []).filter((v) => v.remainingMs != null && v.remainingMs > 0);
+    if (!timed.length) return null;
+    const max = Math.max(...timed.map((v) => v.remainingMs));
+    const rows = timed
+      .map((v) => {
+        const s = STATUS[v.status] || STATUS.active;
+        const pct = Math.max(4, Math.round((v.remainingMs / max) * 100));
+        return (
+          '<div class="ch-row">' +
+          '<div class="ch-name" title="' + esc(v.title) + '">' + esc(v.title) + "</div>" +
+          '<div class="ch-track"><div class="ch-bar" style="width:' + pct + "%;background:" + s.color + '"></div></div>' +
+          '<div class="ch-val">' + esc(v.remainingLabel || "") + "</div>" +
+          "</div>"
+        );
+      })
+      .join("");
+
+    const box = document.createElement("div");
+    box.className = "msg bot chart";
+    box.innerHTML =
+      '<div class="ch-title">Temps d\'accès restant</div>' + rows +
+      '<div class="ch-legend">' +
+      Object.values(STATUS)
+        .filter((s) => timed.some((v) => (STATUS[v.status] || {}).label === s.label))
+        .map((s) => '<span><i style="background:' + s.color + '"></i>' + s.label + "</span>")
+        .join("") +
+      "</div>";
+    $("chatLog").appendChild(box);
+    $("chatLog").scrollTop = $("chatLog").scrollHeight;
+    return box;
   }
 
   function openChat() {
@@ -480,12 +596,12 @@
     $("chatSend").disabled = true;
     const typing = addMsg("…", "bot typing");
 
-    let reply, failed = false;
+    let reply, videos = null, failed = false;
     try {
       // On n'envoie que les échanges PRÉCÉDENTS (la question courante est
       // transmise à part), limités aux 8 derniers pour rester léger.
       const r = await window.vt.assistant(text, chatHistory.slice(0, -1).slice(-8));
-      if (r && r.ok) reply = r.reply;
+      if (r && r.ok) { reply = r.reply; videos = r.videos || null; }
       else { reply = (r && r.error) || "Réponse indisponible."; failed = true; }
     } catch (_) {
       reply = "Pas de connexion — vérifiez votre réseau.";
@@ -493,8 +609,13 @@
     }
 
     typing.remove();
-    addMsg(reply, failed ? "bot err" : "bot");
-    if (!failed) chatHistory.push({ role: "assistant", text: reply });
+    addMsg(reply, failed ? "bot err" : "bot", !failed); // Markdown si réponse valide
+    if (!failed) {
+      chatHistory.push({ role: "assistant", text: reply });
+      // Graphique en complément quand la réponse parle de plusieurs vidéos.
+      const many = /\|/.test(reply) || /vidéo/i.test(text);
+      if (many) renderChart(videos);
+    }
 
     chatBusy = false;
     $("chatSend").disabled = false;

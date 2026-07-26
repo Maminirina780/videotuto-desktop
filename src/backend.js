@@ -361,7 +361,9 @@ async function askAssistant(message, history) {
     if (!res.ok || !data.reply) {
       return { ok: false, error: data.error || "Réponse indisponible." };
     }
-    return { ok: true, reply: data.reply };
+    // `videos` = inventaire structuré (titre, état, temps restant) : sert au
+    // tableau coloré et au graphique côté interface.
+    return { ok: true, reply: data.reply, videos: data.videos || null };
   } catch (e) {
     return { ok: false, error: "Pas de connexion — vérifiez votre réseau." };
   }
