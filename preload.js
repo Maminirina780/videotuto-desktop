@@ -22,6 +22,10 @@ contextBridge.exposeInMainWorld("vt", {
   listImages: () => ipcRenderer.invoke("vt:list-images"),
   imageSource: (imageKey) => ipcRenderer.invoke("vt:image-source", imageKey),
 
+  // Assistant « Ask Mora Abonner » (chat)
+  assistant: (message, history) =>
+    ipcRenderer.invoke("vt:assistant", { message, history }),
+
   // Dossiers
   listFolders: () => ipcRenderer.invoke("vt:list-folders"),
   folderContent: (folderId) => ipcRenderer.invoke("vt:folder-content", folderId),

@@ -148,6 +148,9 @@ if (!gotLock) {
     ipcMain.handle("vt:play-source", (_e, videoKey) => backend.playSource(videoKey));
     ipcMain.handle("vt:list-images", () => backend.listImages());
     ipcMain.handle("vt:image-source", (_e, imageKey) => backend.imageSource(imageKey));
+    ipcMain.handle("vt:assistant", (_e, { message, history }) =>
+      backend.askAssistant(message, history)
+    );
     ipcMain.handle("vt:list-folders", () => backend.listFolders());
     ipcMain.handle("vt:folder-content", (_e, folderId) => backend.folderContent(folderId));
     ipcMain.handle("vt:download-states", () => store.states());

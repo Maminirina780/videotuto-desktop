@@ -35,6 +35,12 @@
         { imageKey: "images/1784000000001-photo-4k.jpg", title: "Photo 4k", expiresAt: Date.now() + 3 * 3600 * 1000 },
       ] }),
       imageSource: async () => ({ ok: true, src: "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='400' height='250'><rect width='400' height='250' fill='#0A84FF'/><text x='200' y='130' fill='#fff' font-size='22' text-anchor='middle'>Aperçu</text></svg>") }),
+      assistant: async (msg) => ({
+        ok: true,
+        reply:
+          "Vous avez 4 vidéos accessibles. Pour « Accès minuté », il reste 5 min " +
+          "à la lecture. (Aperçu : réponse simulée à « " + msg + " ».)",
+      }),
       listFolders: async () => ({ ok: true, folders: [{ id: "f1", name: "Cours HTML", expiresAt: null }] }),
       folderContent: async () => ({ ok: true,
         videos: [{ videoKey: "videos/9-html3.mp4", title: "Html3", expiresAt: null, downloaded: false }],
@@ -419,6 +425,80 @@
   $("folderBack").addEventListener("click", () => {
     $("folderContent").hidden = true;
     $("foldersList").hidden = false;
+  });
+
+  // ── Assistant « Ask Mora Abonner » ──
+  // Le serveur répond en connaissant les vidéos et les temps d'accès de
+  // l'utilisateur (français ou malgache). On garde l'historique récent pour
+  // que la conversation reste cohérente.
+  const chatHistory = []; // [{role:'user'|'assistant', text}]
+  let chatBusy = false;
+
+  const WELCOME =
+    "Bonjour 👋 Je suis Ask Mora Abonner, votre assistant. " +
+    "Posez vos questions en français ou en malgache : « combien de vidéos ai-je ? », " +
+    "« combien de temps me reste-t-il ? »…";
+
+  function addMsg(text, kind) {
+    const div = document.createElement("div");
+    div.className = "msg " + kind;
+    div.textContent = text;
+    $("chatLog").appendChild(div);
+    $("chatLog").scrollTop = $("chatLog").scrollHeight;
+    return div;
+  }
+
+  function openChat() {
+    $("chatOverlay").hidden = false;
+    $("chatPanel").hidden = false;
+    if (!$("chatLog").childElementCount) addMsg(WELCOME, "bot");
+    $("chatInput").focus();
+  }
+  function closeChat() {
+    $("chatOverlay").hidden = true;
+    $("chatPanel").hidden = true;
+  }
+
+  $("assistantBtn").addEventListener("click", openChat);
+  $("chatClose").addEventListener("click", closeChat);
+  $("chatOverlay").addEventListener("click", closeChat);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("chatPanel").hidden) closeChat();
+  });
+
+  $("chatForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = $("chatInput");
+    const text = input.value.trim();
+    if (!text || chatBusy) return;
+
+    input.value = "";
+    addMsg(text, "me");
+    chatHistory.push({ role: "user", text });
+
+    chatBusy = true;
+    $("chatSend").disabled = true;
+    const typing = addMsg("…", "bot typing");
+
+    let reply, failed = false;
+    try {
+      // On n'envoie que les échanges PRÉCÉDENTS (la question courante est
+      // transmise à part), limités aux 8 derniers pour rester léger.
+      const r = await window.vt.assistant(text, chatHistory.slice(0, -1).slice(-8));
+      if (r && r.ok) reply = r.reply;
+      else { reply = (r && r.error) || "Réponse indisponible."; failed = true; }
+    } catch (_) {
+      reply = "Pas de connexion — vérifiez votre réseau.";
+      failed = true;
+    }
+
+    typing.remove();
+    addMsg(reply, failed ? "bot err" : "bot");
+    if (!failed) chatHistory.push({ role: "assistant", text: reply });
+
+    chatBusy = false;
+    $("chatSend").disabled = false;
+    input.focus();
   });
 
   // ── Démarrage : session déjà ouverte ? ──

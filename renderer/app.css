@@ -125,6 +125,47 @@ form input:focus{outline:0;border-color:var(--accent)}
 #video{width:100%;height:100%;background:#000}
 .player-msg{position:absolute;color:var(--label2);font-size:15px;padding:20px;text-align:center}
 
+/* ── Assistant « Ask Mora Abonner » ── */
+.chat-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;
+  animation:fade .18s ease}
+@keyframes fade{from{opacity:0}}
+.chat-panel{position:fixed;top:0;right:0;bottom:0;width:min(400px,100vw);z-index:21;
+  display:flex;flex-direction:column;background:var(--surface);
+  border-left:1px solid var(--sep);box-shadow:-12px 0 40px rgba(0,0,0,.55);
+  animation:slideIn .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes slideIn{from{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){
+  .chat-panel,.chat-overlay{animation:none}
+}
+.chat-head{display:flex;align-items:center;gap:11px;padding:15px 16px;
+  border-bottom:1px solid var(--sep);flex:none}
+.chat-avatar{width:36px;height:36px;border-radius:11px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(145deg,#0A84FF,#0060DF);color:#fff}
+.chat-avatar svg{width:19px;height:19px}
+.chat-id{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.chat-id strong{font-size:15px}
+.chat-close{border:0;background:transparent;color:var(--label2);font-size:26px;
+  line-height:1;cursor:pointer;padding:0 4px;border-radius:8px}
+.chat-close:hover{color:var(--label)}
+.chat-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:85%;padding:10px 14px;border-radius:16px;font-size:14.5px;line-height:1.45;
+  white-space:pre-wrap;word-wrap:break-word;user-select:text}
+.msg.bot{align-self:flex-start;background:var(--surface2);color:var(--label);
+  border-bottom-left-radius:5px}
+.msg.me{align-self:flex-end;background:var(--accent);color:#fff;
+  border-bottom-right-radius:5px}
+.msg.err{background:rgba(255,69,58,.14);color:#ffd6d3;border:1px solid var(--red)}
+.msg.typing{color:var(--label3)}
+.chat-bar{display:flex;gap:9px;padding:12px 14px;border-top:1px solid var(--sep);flex:none}
+.chat-bar input{flex:1;padding:12px 15px;border:1.5px solid var(--sep);border-radius:22px;
+  background:var(--bg);color:var(--label);font:inherit;font-size:14.5px;min-width:0}
+.chat-bar input:focus{outline:0;border-color:var(--accent)}
+.chat-send{flex:none;width:44px;height:44px;border:0;border-radius:50%;background:var(--accent);
+  color:#fff;cursor:pointer;display:grid;place-items:center;transition:background .12s}
+.chat-send:hover{background:var(--accent-press)}
+.chat-send:disabled{opacity:.45;cursor:default}
+.chat-send svg{width:19px;height:19px}
+
 /* ── Toast ── */
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
   background:var(--surface2);color:var(--label);border:1px solid var(--sep);

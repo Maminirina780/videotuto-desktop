@@ -53,6 +53,9 @@
       <span class="secure-badge" title="Fenêtre protégée : capture d'écran et enregistrement bloqués">🔒 Protégé</span>
       <span class="spacer"></span>
       <span class="muted small" id="whoami"></span>
+      <button class="btn ghost small" id="assistantBtn" title="Assistant Ask Mora Abonner">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:15px;height:15px;vertical-align:-2px;margin-right:5px"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 11H6V9h2v2zm5 0h-2V9h2v2zm5 0h-2V9h2v2z"/></svg>Assistant
+      </button>
       <button class="btn ghost small" id="refreshBtn">Actualiser</button>
       <button class="btn ghost small" id="updateBtn">Mise à jour</button>
       <button class="btn ghost small" id="logoutBtn">Déconnexion</button>
@@ -122,6 +125,28 @@
       <div class="player-msg" id="imgMsg" hidden></div>
     </div>
   </section>
+
+  <!-- ═══════════ ASSISTANT « Ask Mora Abonner » ═══════════ -->
+  <div id="chatOverlay" class="chat-overlay" hidden></div>
+  <aside id="chatPanel" class="chat-panel" hidden aria-label="Assistant Ask Mora Abonner">
+    <header class="chat-head">
+      <span class="chat-avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 11H6V9h2v2zm5 0h-2V9h2v2zm5 0h-2V9h2v2z"/></svg>
+      </span>
+      <div class="chat-id">
+        <strong>Ask Mora Abonner</strong>
+        <span class="muted small">Assistant</span>
+      </div>
+      <button class="chat-close" id="chatClose" aria-label="Fermer l'assistant">&times;</button>
+    </header>
+    <div class="chat-log" id="chatLog" aria-live="polite"></div>
+    <form class="chat-bar" id="chatForm" autocomplete="off">
+      <input id="chatInput" type="text" placeholder="Posez votre question…" maxlength="500" />
+      <button class="chat-send" id="chatSend" type="submit" aria-label="Envoyer">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </form>
+  </aside>
 
   <div id="toast" class="toast" hidden></div>
 

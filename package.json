@@ -1,7 +1,7 @@
 {
   "name": "videotuto-desktop",
   "productName": "VideoTuto",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Client de bureau sécurisé pour VideoTuto (lecture protégée, téléchargements chiffrés).",
   "author": "VideoTuto",
   "license": "UNLICENSED",
@@ -25,9 +25,18 @@
       "google-config.json",
       "!**/*.map"
     ],
-    "directories": { "output": "release" },
+    "directories": {
+      "output": "release"
+    },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "signAndEditExecutable": false
     },
     "nsis": {
@@ -39,8 +48,20 @@
     },
     "mac": {
       "target": [
-        { "target": "dmg", "arch": ["arm64", "x64"] },
-        { "target": "zip", "arch": ["arm64", "x64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ],
       "category": "public.app-category.education",
       "darkModeSupport": true,

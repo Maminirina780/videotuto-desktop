@@ -340,6 +340,33 @@ async function imageSource(imageKey) {
   }
 }
 
+// ── Assistant « Ask Mora Abonner » ──
+// Le serveur répond en connaissant les vidéos et les temps d'accès de
+// l'utilisateur. history = [{role:'user'|'assistant', text}] (contexte récent).
+async function askAssistant(message, history) {
+  loadSession();
+  if (!TOKEN) return { ok: false, error: "Non connecté." };
+  const p = "/assistant";
+  try {
+    const res = await fetch(BASE + p, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders("POST", p) },
+      body: JSON.stringify({ message, history: history || [] }),
+    });
+    if (res.status === 401) {
+      clearSession();
+      return { ok: false, error: "Session expirée, reconnectez-vous." };
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.reply) {
+      return { ok: false, error: data.error || "Réponse indisponible." };
+    }
+    return { ok: true, reply: data.reply };
+  } catch (e) {
+    return { ok: false, error: "Pas de connexion — vérifiez votre réseau." };
+  }
+}
+
 // ── Dossiers ──
 async function listFolders() {
   loadSession();
@@ -394,4 +421,5 @@ module.exports = {
   imageSource,
   listFolders,
   folderContent,
+  askAssistant,
 };
