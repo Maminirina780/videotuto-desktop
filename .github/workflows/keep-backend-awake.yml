@@ -1,0 +1,45 @@
+name: Garder le serveur éveillé
+
+# POURQUOI CE FICHIER ?
+# Le backend VideoTuto est hébergé sur l'offre GRATUITE de Render, qui met le
+# service en veille après ~15 minutes sans visite. La première personne qui
+# ouvre l'app doit alors attendre son redémarrage (30 s à 1 min) : c'est ce qui
+# donnait un écran de chargement interminable, surtout sur un réseau mobile lent.
+#
+# Ce petit travail programmé appelle le serveur toutes les 10 minutes pour qu'il
+# ne s'endorme jamais. Il est placé dans CE dépôt (public) car GitHub offre des
+# minutes d'exécution ILLIMITÉES aux dépôts publics — c'est donc entièrement
+# gratuit. (Dans un dépôt privé, ce rythme dépasserait le quota mensuel offert.)
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # toutes les 10 minutes
+  workflow_dispatch: {} # permet aussi de le lancer à la main
+
+# Une seule exécution à la fois : inutile d'empiler les appels.
+concurrency:
+  group: keep-awake
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Réveiller le backend
+        run: |
+          URL="https://video-backend-sj8q.onrender.com/app-version"
+          # 3 tentatives : si le service dormait, la 1re requête le réveille
+          # (et peut expirer), les suivantes le trouvent debout.
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$URL" || echo "000")
+            echo "Tentative $i : HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "✅ Serveur éveillé et opérationnel."
+              exit 0
+            fi
+            sleep 15
+          done
+          # On ne fait pas échouer le job : un réveil raté sera retenté au
+          # prochain passage, inutile d'envoyer une alerte d'échec.
+          echo "⚠️ Le serveur n'a pas répondu 200 cette fois — nouvelle tentative dans 10 min."
