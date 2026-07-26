@@ -44,7 +44,18 @@
           "| Css bases | 🟡 En cours | 1 j 22 h |\n" +
           "| Terminal | 🔴 Expire bientôt | 45 min |\n" +
           "| Accès minuté | 🔵 Démarre à la lecture | 5 min accordées |\n\n" +
+          "## Ce qu'il faut retenir\n" +
+          "- **Terminal** expire dans moins d'une heure : regardez-la en priorité.\n" +
+          "- **Accès minuté** n'a pas encore démarré ; son compte à rebours de 5 minutes " +
+          "ne commencera qu'au premier lancement de la lecture.\n" +
+          "- **Html1** reste disponible sans limite de temps.\n\n" +
+          "### Conseil\n" +
+          "Téléchargez les vidéos qui vous intéressent pour les consulter hors connexion : " +
+          "elles restent chiffrées sur votre appareil et demeurent lisibles jusqu'à " +
+          "l'expiration de votre accès. Vous gagnerez du temps sur un réseau lent, et la " +
+          "lecture démarrera instantanément même sans connexion.\n\n" +
           "Pensez à regarder *Terminal* en priorité.",
+        actions: [{ type: "download_all", label: "Télécharger toutes mes vidéos" }],
         videos: [
           { title: "Css bases", status: "active", remainingMs: 165600000, remainingLabel: "1 j 22 h" },
           { title: "Terminal", status: "expiring", remainingMs: 2700000, remainingLabel: "45 min" },
@@ -459,6 +470,22 @@
       .replace(/`([^`]+)`/g, "<code>$1</code>");
   }
 
+  // Une cellule d'état (« 🔴 Expire bientôt ») devient une pastille colorée :
+  // beaucoup plus lisible qu'un simple texte dans un tableau dense. Le libellé
+  // reste écrit — la couleur ne porte jamais seule l'information.
+  const PILLS = [
+    { re: /🟢/, cls: "ok" }, { re: /🟡/, cls: "warn" }, { re: /🔴/, cls: "danger" },
+    { re: /🔵/, cls: "info" }, { re: /⚫|⚪/, cls: "muted" },
+  ];
+  function mdCell(raw) {
+    const hit = PILLS.find((p) => p.re.test(raw));
+    if (hit) {
+      const label = raw.replace(/[🟢🟡🔴🔵⚫⚪]\s*/g, "").trim();
+      if (label) return '<span class="pill ' + hit.cls + '">' + mdInline(label) + "</span>";
+    }
+    return mdInline(raw);
+  }
+
   function renderMarkdown(src) {
     const lines = String(src || "").replace(/\r/g, "").split("\n");
     let html = "", list = null, i = 0;
@@ -477,7 +504,7 @@
         i += 2;
         let body = "";
         while (i < lines.length && lines[i].includes("|")) {
-          body += "<tr>" + cells(lines[i]).map((c) => "<td>" + mdInline(c) + "</td>").join("") + "</tr>";
+          body += "<tr>" + cells(lines[i]).map((c) => "<td>" + mdCell(c) + "</td>").join("") + "</tr>";
           i++;
         }
         html +=
@@ -564,6 +591,46 @@
     return box;
   }
 
+  // ── Actions proposées par l'assistant (boutons) ──
+  // L'assistant ne déclenche JAMAIS un téléchargement lui-même : il propose,
+  // l'utilisateur décide. On affiche donc un bouton sous sa réponse.
+  function renderActions(actions) {
+    if (!actions || !actions.length) return;
+    const box = document.createElement("div");
+    box.className = "chat-actions";
+    actions.forEach((a) => {
+      if (a.type !== "download_all") return;
+      const btn = document.createElement("button");
+      btn.className = "btn small act-dl-all";
+      btn.textContent = a.label || "Télécharger toutes mes vidéos";
+      btn.addEventListener("click", () => downloadAll(btn));
+      box.appendChild(btn);
+    });
+    if (!box.childElementCount) return;
+    $("chatLog").appendChild(box);
+    $("chatLog").scrollTop = $("chatLog").scrollHeight;
+  }
+
+  /** Télécharge, une par une, les vidéos pas encore disponibles hors-ligne. */
+  async function downloadAll(btn) {
+    btn.disabled = true;
+    const r = await window.vt.listVideos();
+    const todo = ((r && r.videos) || []).filter((v) => !v.downloaded);
+    if (!todo.length) {
+      btn.textContent = "Tout est déjà téléchargé ✓";
+      return;
+    }
+    let done = 0;
+    for (const v of todo) {
+      btn.textContent = "Téléchargement… " + (done + 1) + "/" + todo.length;
+      const res = await window.vt.download(v);
+      if (res && res.ok) done++;
+    }
+    btn.textContent = done + " vidéo" + (done > 1 ? "s" : "") + " téléchargée" + (done > 1 ? "s" : "") + " ✓";
+    loadLibrary();
+    toast(done + " vidéo(s) disponible(s) hors-ligne");
+  }
+
   function openChat() {
     $("chatOverlay").hidden = false;
     $("chatPanel").hidden = false;
@@ -596,12 +663,12 @@
     $("chatSend").disabled = true;
     const typing = addMsg("…", "bot typing");
 
-    let reply, videos = null, failed = false;
+    let reply, videos = null, actions = null, failed = false;
     try {
       // On n'envoie que les échanges PRÉCÉDENTS (la question courante est
       // transmise à part), limités aux 8 derniers pour rester léger.
       const r = await window.vt.assistant(text, chatHistory.slice(0, -1).slice(-8));
-      if (r && r.ok) { reply = r.reply; videos = r.videos || null; }
+      if (r && r.ok) { reply = r.reply; videos = r.videos || null; actions = r.actions || null; }
       else { reply = (r && r.error) || "Réponse indisponible."; failed = true; }
     } catch (_) {
       reply = "Pas de connexion — vérifiez votre réseau.";
@@ -615,6 +682,7 @@
       // Graphique en complément quand la réponse parle de plusieurs vidéos.
       const many = /\|/.test(reply) || /vidéo/i.test(text);
       if (many) renderChart(videos);
+      renderActions(actions);
     }
 
     chatBusy = false;

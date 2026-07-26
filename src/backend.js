@@ -362,8 +362,14 @@ async function askAssistant(message, history) {
       return { ok: false, error: data.error || "Réponse indisponible." };
     }
     // `videos` = inventaire structuré (titre, état, temps restant) : sert au
-    // tableau coloré et au graphique côté interface.
-    return { ok: true, reply: data.reply, videos: data.videos || null };
+    // tableau coloré et au graphique. `actions` = boutons proposés (ex.
+    // « Télécharger toutes mes vidéos »), déclenchés par l'utilisateur seul.
+    return {
+      ok: true,
+      reply: data.reply,
+      videos: data.videos || null,
+      actions: data.actions || [],
+    };
   } catch (e) {
     return { ok: false, error: "Pas de connexion — vérifiez votre réseau." };
   }
