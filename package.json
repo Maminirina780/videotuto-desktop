@@ -1,7 +1,7 @@
 {
   "name": "videotuto-desktop",
   "productName": "VideoTuto",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Client de bureau sécurisé pour VideoTuto (lecture protégée, téléchargements chiffrés).",
   "author": "VideoTuto",
   "license": "UNLICENSED",
