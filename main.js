@@ -1,4 +1,4 @@
-// main.js — Processus principal Electron de VideoTuto (bureau).
+// main.js — Processus principal Electron de Mora Video (bureau).
 // Fenêtre verrouillée + protection anti-capture d'écran (façon Netflix) :
 //   • setContentProtection(true) : la fenêtre est EXCLUE des captures et
 //     enregistrements d'écran de l'OS (équivalent PC du FLAG_SECURE Android).
@@ -49,7 +49,7 @@ if (!gotLock) {
       backgroundColor: "#000000",
       show: false,
       autoHideMenuBar: true,
-      title: "VideoTuto",
+      title: "Mora Video",
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
         contextIsolation: true, // le renderer ne partage rien avec Node
@@ -153,6 +153,22 @@ if (!gotLock) {
     );
     ipcMain.handle("vt:list-folders", () => backend.listFolders());
     ipcMain.handle("vt:folder-content", (_e, folderId) => backend.folderContent(folderId));
+    // PDF (cours, fiches) et fichiers texte : fenêtre séparée, protégée contre la capture,
+    // sans barre d'outils ; le fichier temporaire est effacé à la fermeture.
+    ipcMain.handle("vt:open-file", async (_e, { folderId, name }) => {
+      const r = await backend.downloadFolderFile(folderId, name);
+      if (!r.ok) return r;
+      const pdf = /\.pdf$/i.test(name);
+      const w = new BrowserWindow({
+        width: 980, height: 820, parent: mainWindow, backgroundColor: "#0D0E11", autoHideMenuBar: true, title: name,
+        webPreferences: { plugins: pdf, contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: false, javascript: pdf },
+      });
+      w.setContentProtection(true);
+      w.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+      w.on("closed", () => { try { require("fs").rmSync(require("path").dirname(r.file), { recursive: true, force: true }); } catch (_) {} });
+      await w.loadURL(require("url").pathToFileURL(r.file).href + (pdf ? "#toolbar=0&navpanes=0" : ""));
+      return { ok: true };
+    });
     ipcMain.handle("vt:download-states", () => store.states());
     ipcMain.handle("vt:delete-download", (_e, videoKey) => store.remove(videoKey));
     ipcMain.handle("vt:download", async (_e, item) => {

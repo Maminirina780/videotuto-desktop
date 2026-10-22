@@ -340,7 +340,7 @@ async function imageSource(imageKey) {
   }
 }
 
-// ── Assistant « Ask Mora Abonner » ──
+// ── Assistant « Mora Abonner » ──
 // Le serveur répond en connaissant les vidéos et les temps d'accès de
 // l'utilisateur. history = [{role:'user'|'assistant', text}] (contexte récent).
 async function askAssistant(message, history) {
@@ -409,13 +409,38 @@ async function folderContent(folderId) {
       title: imageTitle(im.imageKey),
       expiresAt: im.expiresAt || null,
     }));
-    return { ok: true, videos, images };
+    const files = (data.files || []).map((f) => ({ name: f.name, sizeBytes: f.sizeBytes || 0 }));
+    return { ok: true, videos, images, files };
+  } catch (e) {
+    return { ok: false, error: "Réseau indisponible." };
+  }
+}
+
+/**
+ * Télécharge un fichier de dossier (PDF, texte…) dans un dossier temporaire
+ * privé, pour l'ouvrir dans une fenêtre protégée ; le fichier est effacé à la
+ * fermeture de la fenêtre (main.js).
+ */
+async function downloadFolderFile(folderId, name) {
+  const p = "/file-raw?folderId=" + encodeURIComponent(folderId) + "&name=" + encodeURIComponent(name);
+  try {
+    const res = await fetch(BASE + p, { headers: authHeaders("GET", p) });
+    if (res.status === 403) return { ok: false, error: "Accès non autorisé à ce fichier." };
+    if (!res.ok) return { ok: false, error: "Fichier introuvable." };
+    const buf = Buffer.from(await res.arrayBuffer());
+    const os = require("os"), fsx = require("fs"), path = require("path");
+    const dir = fsx.mkdtempSync(path.join(os.tmpdir(), "moravideo-"));
+    const safe = String(name).replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 120) || "fichier";
+    const file = path.join(dir, safe);
+    fsx.writeFileSync(file, buf);
+    return { ok: true, file };
   } catch (e) {
     return { ok: false, error: "Réseau indisponible." };
   }
 }
 
 module.exports = {
+  downloadFolderFile,
   login,
   loginWithGoogle,
   googleAvailable,

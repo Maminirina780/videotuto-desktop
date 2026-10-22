@@ -1,9 +1,9 @@
 {
   "name": "videotuto-desktop",
-  "productName": "VideoTuto",
-  "version": "1.0.6",
-  "description": "Client de bureau sécurisé pour VideoTuto (lecture protégée, téléchargements chiffrés).",
-  "author": "VideoTuto",
+  "productName": "Mora Video",
+  "version": "1.1.0",
+  "description": "Mora Video pour ordinateur : tutoriels vidéo et PDF protégés (lecture sécurisée, téléchargements chiffrés).",
+  "author": "Mora Abonner",
   "license": "UNLICENSED",
   "private": true,
   "main": "main.js",
@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "com.vmp.videotuto.desktop",
-    "productName": "VideoTuto",
+    "productName": "Mora Video",
     "files": [
       "main.js",
       "preload.js",
@@ -37,14 +37,15 @@
           ]
         }
       ],
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "artifactName": "MoraVideo-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "perMachine": false,
       "createDesktopShortcut": true,
-      "shortcutName": "VideoTuto"
+      "shortcutName": "Mora Video"
     },
     "mac": {
       "target": [
@@ -69,7 +70,7 @@
       "artifactName": "VideoTuto-mac-${arch}.${ext}"
     },
     "dmg": {
-      "title": "VideoTuto ${version}"
+      "title": "Mora Video ${version}"
     }
   },
   "devDependencies": {

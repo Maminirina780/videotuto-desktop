@@ -1,15 +1,23 @@
-/* app.css — Design Apple/iOS, mode sombre OLED (cohérent avec l'app Android). */
+/* app.css — Mora Video : palette Mora (fond presque noir, texte crème, accent corail), Barlow + Instrument Serif,
+   comme l'app Android et Mora Ship. Les compteurs passent en rouge pendant les 3 derniers jours d'accès. */
+@font-face{font-family:Barlow;src:url(fonts/barlow_regular.ttf);font-weight:400}
+@font-face{font-family:Barlow;src:url(fonts/barlow_medium.ttf);font-weight:500}
+@font-face{font-family:Barlow;src:url(fonts/barlow_semibold.ttf);font-weight:600}
+@font-face{font-family:Barlow;src:url(fonts/barlow_bold.ttf);font-weight:700}
+@font-face{font-family:"Instrument Serif";src:url(fonts/instrument_serif.ttf)}
+@font-face{font-family:"Instrument Serif";src:url(fonts/instrument_serif_italic.ttf);font-style:italic}
 :root{
-  --bg:#000000; --surface:#1C1C1E; --surface2:#2C2C2E;
-  --label:#F5F5F7; --label2:#98989F; --label3:#8E8E93;
-  --accent:#0A84FF; --accent-press:#409CFF;
-  --sep:#38383A; --green:#30D158; --orange:#FF9F0A; --red:#FF453A;
+  --bg:#0D0E11; --surface:#15171B; --surface2:#1D2025;
+  --label:#F3EFE6; --label2:#B3AEA5; --label3:#8F8A82;
+  --accent:#FF8A70; --accent-press:#FFA08A; --on-accent:#1A0D08;
+  --sep:#25282D; --green:#7FD49B; --orange:#F2C46B; --red:#FF6B6B;
+  --serif:"Instrument Serif",Georgia,serif;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0; background:var(--bg); color:var(--label);
-  font-family:-apple-system,"Segoe UI",system-ui,Roboto,sans-serif;
+  font-family:Barlow,"Segoe UI",system-ui,sans-serif;
   /* Anti-copie : pas de sélection ni de glisser d'image. */
   user-select:none; -webkit-user-select:none; -webkit-user-drag:none;
   overflow:hidden;
@@ -23,12 +31,13 @@ img,svg,video{-webkit-user-drag:none}
 
 /* Logo */
 .logo{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;
-  border-radius:16px;background:linear-gradient(135deg,#0A84FF,#0060DF);flex:none}
-.logo svg{width:60%;height:60%}
-.logo.sm{width:34px;height:34px;border-radius:10px}
+  border-radius:16px;background:#0D0E11;border:1px solid rgba(243,239,230,.18);flex:none}
+.logo.sm{width:36px;height:36px;border-radius:11px}
+.mv{font:800 22px/1 Barlow,sans-serif;letter-spacing:-.04em}.logo.sm .mv{font-size:15px}
+.mv b{color:#F3EFE6}.mv i{color:#FF8A70;font-style:normal}
 
 /* Boutons */
-.btn{border:0;border-radius:14px;background:var(--accent);color:#fff;font:inherit;
+.btn{border:0;border-radius:14px;background:var(--accent);color:var(--on-accent);font:inherit;
   font-weight:600;font-size:16px;padding:13px 18px;cursor:pointer;transition:background .12s}
 .btn:hover{background:var(--accent-press)}
 .btn:disabled{opacity:.5;cursor:default}
@@ -42,7 +51,8 @@ img,svg,video{-webkit-user-drag:none}
 .login-card{width:100%;max-width:400px;padding:32px;background:var(--surface);
   border:1px solid var(--sep);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .brand{display:flex;gap:14px;align-items:center;margin-bottom:22px}
-.brand h1{margin:0;font-size:26px;letter-spacing:-.5px}
+.brand h1{margin:0;font:400 34px/1.05 var(--serif);letter-spacing:-.3px}
+.brand h1 em{color:var(--accent)}
 .brand p{margin:2px 0 0;font-size:14px}
 form label{display:block;font-size:13px;color:var(--label2);margin:14px 0 6px}
 form input{width:100%;padding:14px;border:1.5px solid var(--sep);border-radius:12px;
@@ -62,7 +72,7 @@ form input:focus{outline:0;border-color:var(--accent)}
 /* ── Barre du haut ── */
 .topbar{display:flex;align-items:center;gap:12px;padding:16px 22px;
   border-bottom:1px solid var(--sep);background:var(--surface)}
-.topbar h2{margin:0;font-size:20px}
+.topbar h2{margin:0;font:400 26px/1 var(--serif)}
 .secure-badge{font-size:12px;font-weight:700;color:var(--green);
   background:rgba(48,209,88,.14);border-radius:20px;padding:4px 11px;white-space:nowrap}
 
@@ -81,7 +91,9 @@ form input:focus{outline:0;border-color:var(--accent)}
 .folder-row:hover{border-color:var(--accent)}
 .folder-row .fico{font-size:22px}
 .folder-row .fname{font-weight:600;flex:1}
-.folder-row .fexp{font-size:12px;color:var(--orange);font-weight:600}
+.folder-row .fexp{font-size:12px;color:var(--label2);font-weight:600}
+.folder-row .fexp.rouge,.chip-exp.rouge{color:var(--red)}
+.file-card .fico{font-size:22px}
 .folder-head{display:flex;align-items:center;gap:14px;padding:16px 22px 0}
 .folder-head .folder-name{font-weight:600;font-size:17px}
 
@@ -97,7 +109,7 @@ form input:focus{outline:0;border-color:var(--accent)}
 .card-body{padding:12px 14px}
 .card-title{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-sub{font-size:12px;color:var(--label3);margin-top:3px;display:flex;align-items:center;gap:8px}
-.chip-exp{color:var(--orange);font-weight:600}
+.chip-exp{color:var(--label2);font-weight:600}
 .card-actions{display:flex;gap:8px;padding:0 14px 14px}
 .card-actions .btn{flex:1}
 .dl-state{font-size:13px;color:var(--green);font-weight:600;display:flex;align-items:center;gap:6px}
@@ -125,7 +137,7 @@ form input:focus{outline:0;border-color:var(--accent)}
 #video{width:100%;height:100%;background:#000}
 .player-msg{position:absolute;color:var(--label2);font-size:15px;padding:20px;text-align:center}
 
-/* ── Assistant « Ask Mora Abonner » ── */
+/* ── Assistant « Mora Abonner » ── */
 .chat-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;
   animation:fade .18s ease}
 @keyframes fade{from{opacity:0}}
@@ -217,14 +229,20 @@ form input:focus{outline:0;border-color:var(--accent)}
 .ch-legend span{display:inline-flex;align-items:center;gap:5px}
 .ch-legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
 @media (prefers-reduced-motion:reduce){.ch-bar{transition:none}}
-/* Boutons d'action proposés par l'assistant */
+/* Boutons d'action proposés par l'assistant. L'icône change avec l'action :
+   une seule règle de masque, l'icône elle-même vient de --ic. */
 .chat-actions{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 10px}
 .chat-actions .btn{border-radius:20px;font-size:13.5px;padding:9px 16px;
-  min-height:40px;display:inline-flex;align-items:center;gap:7px}
+  min-height:44px;display:inline-flex;align-items:center;gap:7px}
 .chat-actions .btn::before{content:"";width:15px;height:15px;flex:none;
   background:currentColor;
-  -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3v12m0 0 4-4m-4 4-4-4M5 21h14' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat;
-  mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3v12m0 0 4-4m-4 4-4-4M5 21h14' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat}
+  -webkit-mask:var(--ic) center/contain no-repeat;
+  mask:var(--ic) center/contain no-repeat}
+.chat-actions .a-download{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3v12m0 0 4-4m-4 4-4-4M5 21h14' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>")}
+.chat-actions .a-play{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='none' stroke='black' stroke-width='2.2'/><path d='M10.5 8.8l5.2 3.2-5.2 3.2z' fill='black'/></svg>")}
+.chat-actions .a-videos{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='3' y='5' width='18' height='14' rx='2.5' fill='none' stroke='black' stroke-width='2.2'/><path d='M10.3 9.6l4.6 2.4-4.6 2.4z' fill='black'/></svg>")}
+.chat-actions .a-images{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='16' rx='2.5' fill='none' stroke='black' stroke-width='2.2'/><circle cx='8.6' cy='9.4' r='1.7' fill='black'/><path d='M4.5 17.5l4.8-4.8 3.7 3.7 2.6-2.1 4 4.2' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>")}
+.chat-actions .a-folders{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 7.5A2.5 2.5 0 0 1 5.5 5h3.6l2 2.2h7.4A2.5 2.5 0 0 1 21 9.7v7.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'/></svg>")}
 
 .chat-bar{display:flex;gap:9px;padding:12px 14px;border-top:1px solid var(--sep);flex:none}
 .chat-bar input{flex:1;padding:12px 15px;border:1.5px solid var(--sep);border-radius:22px;

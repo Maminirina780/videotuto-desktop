@@ -55,7 +55,11 @@
           "l'expiration de votre accès. Vous gagnerez du temps sur un réseau lent, et la " +
           "lecture démarrera instantanément même sans connexion.\n\n" +
           "Pensez à regarder *Terminal* en priorité.",
-        actions: [{ type: "download_all", label: "Télécharger toutes mes vidéos" }],
+        actions: [
+          { type: "play", label: "Lire « Terminal »", key: "videos/1783932133430-terminal.mp4", title: "Terminal" },
+          { type: "download_all", label: "Télécharger toutes mes vidéos", key: "", title: "" },
+          { type: "open_images", label: "Voir mes images", key: "", title: "" },
+        ],
         videos: [
           { title: "Css bases", status: "active", remainingMs: 165600000, remainingLabel: "1 j 22 h" },
           { title: "Terminal", status: "expiring", remainingMs: 2700000, remainingLabel: "45 min" },
@@ -94,6 +98,9 @@
   const PLAY_GLYPH =
     '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 
+  // les 3 derniers jours d'accès : compteurs en rouge (le serveur notifie aussi 3 j, 1 j et la fin)
+  const ALERTE_MS = 3 * 24 * 3600 * 1000;
+  const rouge = (ms) => ms && ms - Date.now() <= ALERTE_MS ? " rouge" : "";
   function expiryLabel(ms) {
     const rem = ms - Date.now();
     if (rem <= 0) return "Accès expiré";
@@ -118,7 +125,7 @@
   // Sous-titre d'accès d'une carte vidéo : décompte en cours, « démarre à la
   // lecture » (durée non entamée), ou accès permanent.
   function accessSub(v) {
-    if (v.expiresAt) return '<span class="chip-exp">' + esc(expiryLabel(v.expiresAt)) + "</span>";
+    if (v.expiresAt) return '<span class="chip-exp' + rouge(v.expiresAt) + '">' + esc(expiryLabel(v.expiresAt)) + "</span>";
     if (v.durationSec) return '<span class="chip-exp">⏳ ' + esc(durationLabel(v.durationSec)) + " à la lecture</span>";
     return "<span>Accès permanent</span>";
   }
@@ -292,7 +299,7 @@
         return;
       }
       txt.textContent = countdownText(rem);
-      el.classList.toggle("danger", rem <= 60000); // rouge sous 1 min
+      el.classList.toggle("danger", rem <= ALERTE_MS); // rouge pendant les 3 derniers jours
     };
     el.hidden = false;
     tick();
@@ -365,7 +372,8 @@
     $("tabImages").hidden = !hasImages;
     $("tabFolders").hidden = !hasFolders;
     $("tabs").hidden = !(hasImages || hasFolders);
-    switchTab("videos");
+    // pas de vidéo hors dossier (ex. acheteur Mora Ship) : on ouvre directement les dossiers
+    switchTab(hasFolders && !$("library").children.length ? "folders" : "videos");
   }
 
   // ── Images ──
@@ -381,7 +389,7 @@
     const card = document.createElement("div");
     card.className = "card";
     const sub = im.expiresAt
-      ? '<span class="chip-exp">' + esc(expiryLabel(im.expiresAt)) + "</span>"
+      ? '<span class="chip-exp' + rouge(im.expiresAt) + '">' + esc(expiryLabel(im.expiresAt)) + "</span>"
       : '<span>Accès permanent</span>';
     card.innerHTML =
       '<div class="thumb">🖼️</div>' +
@@ -422,7 +430,7 @@
     folders.forEach((f) => {
       const row = document.createElement("div");
       row.className = "folder-row";
-      const exp = f.expiresAt ? '<span class="fexp">' + esc(expiryLabel(f.expiresAt)) + "</span>" : "";
+      const exp = f.expiresAt ? '<span class="fexp' + rouge(f.expiresAt) + '">' + esc(expiryLabel(f.expiresAt)) + "</span>" : "";
       row.innerHTML = '<span class="fico">📁</span><span class="fname">' + esc(f.name) + "</span>" + exp + '<span style="color:var(--label3)">›</span>';
       row.addEventListener("click", () => openFolder(f));
       box.appendChild(row);
@@ -438,7 +446,19 @@
     const reload = () => openFolder(f);
     (r.videos || []).forEach((v) => renderCard(v, items, reload));
     (r.images || []).forEach((im) => renderImageCard(im, items));
-    if (!(r.videos || []).length && !(r.images || []).length) {
+    // PDF (cours, fiches) et autres fichiers : ouverts dans une fenêtre protégée
+    (r.files || []).forEach((fi) => {
+      const c = document.createElement("div");
+      c.className = "folder-row file-card";
+      c.innerHTML = '<span class="fico">' + (/\.pdf$/i.test(fi.name) ? "📄" : "🗒") + '</span><span class="fname">' + esc(fi.name) + "</span>" +
+        '<span class="fexp">' + esc(/\.pdf$/i.test(fi.name) ? "PDF" : "Fichier") + (fi.sizeBytes ? " · " + Math.max(1, Math.round(fi.sizeBytes / 1024)) + " Ko" : "") + "</span>";
+      c.addEventListener("click", async () => {
+        const o = window.vt.openFile ? await window.vt.openFile(f.id, fi.name) : { ok: false, error: "Mettez à jour Mora Video." };
+        if (!o.ok) toast(o.error || "Fichier indisponible.", true);
+      });
+      items.appendChild(c);
+    });
+    if (!(r.videos || []).length && !(r.images || []).length && !(r.files || []).length) {
       items.innerHTML = '<div class="empty">Ce dossier est vide.</div>';
     }
   }
@@ -447,7 +467,7 @@
     $("foldersList").hidden = false;
   });
 
-  // ── Assistant « Ask Mora Abonner » ──
+  // ── Assistant « Mora Abonner » ──
   // Le serveur répond en connaissant les vidéos et les temps d'accès de
   // l'utilisateur (français ou malgache). On garde l'historique récent pour
   // que la conversation reste cohérente.
@@ -455,7 +475,7 @@
   let chatBusy = false;
 
   const WELCOME =
-    "Bonjour 👋 Je suis Ask Mora Abonner, votre assistant. " +
+    "Bonjour 👋 Je suis Mora Abonner, votre assistant. " +
     "Posez vos questions en français ou en malgache : « combien de vidéos ai-je ? », " +
     "« combien de temps me reste-t-il ? »…";
 
@@ -592,18 +612,43 @@
   }
 
   // ── Actions proposées par l'assistant (boutons) ──
-  // L'assistant ne déclenche JAMAIS un téléchargement lui-même : il propose,
-  // l'utilisateur décide. On affiche donc un bouton sous sa réponse.
+  // L'assistant ne déclenche JAMAIS rien lui-même : il propose selon la demande,
+  // l'utilisateur décide. Les boutons apparaissent sous sa réponse. Le serveur
+  // n'envoie que des actions d'un catalogue fermé, visant du contenu réel.
+  const CHAT_ACTIONS = {
+    download_all: {
+      label: "Télécharger toutes mes vidéos", icon: "a-download",
+      run: (a, btn) => downloadAll(btn),
+    },
+    play: {
+      label: "Lire cette vidéo", icon: "a-play",
+      run: (a) => { closeChat(); playVideo({ videoKey: a.key, title: a.title || a.label }); },
+    },
+    open_videos: {
+      label: "Voir mes vidéos", icon: "a-videos",
+      run: () => { closeChat(); show("library"); switchTab("videos"); },
+    },
+    open_images: {
+      label: "Voir mes images", icon: "a-images",
+      run: () => { closeChat(); show("library"); switchTab("images"); },
+    },
+    open_folders: {
+      label: "Voir mes dossiers", icon: "a-folders",
+      run: () => { closeChat(); show("library"); switchTab("folders"); },
+    },
+  };
+
   function renderActions(actions) {
     if (!actions || !actions.length) return;
     const box = document.createElement("div");
     box.className = "chat-actions";
-    actions.forEach((a) => {
-      if (a.type !== "download_all") return;
+    actions.slice(0, 3).forEach((a) => {
+      const def = CHAT_ACTIONS[a.type];
+      if (!def || (a.type === "play" && !a.key)) return;
       const btn = document.createElement("button");
-      btn.className = "btn small act-dl-all";
-      btn.textContent = a.label || "Télécharger toutes mes vidéos";
-      btn.addEventListener("click", () => downloadAll(btn));
+      btn.className = "btn small " + def.icon;
+      btn.textContent = a.label || def.label;
+      btn.addEventListener("click", () => def.run(a, btn));
       box.appendChild(btn);
     });
     if (!box.childElementCount) return;

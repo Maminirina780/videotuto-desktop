@@ -18,7 +18,7 @@ const root = path.join(__dirname, "..");
 const run = (cmd) => execSync(cmd, { cwd: root, stdio: "inherit" });
 
 const rcedit = path.join(root, "build", "rcedit-x64.exe");
-const appExe = path.join(root, "release", "win-unpacked", "VideoTuto.exe");
+const appExe = path.join(root, "release", "win-unpacked", "Mora Video.exe");
 const icon = path.join(root, "build", "icon.ico");
 
 if (!fs.existsSync(rcedit)) {

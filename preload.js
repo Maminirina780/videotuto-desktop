@@ -22,13 +22,14 @@ contextBridge.exposeInMainWorld("vt", {
   listImages: () => ipcRenderer.invoke("vt:list-images"),
   imageSource: (imageKey) => ipcRenderer.invoke("vt:image-source", imageKey),
 
-  // Assistant « Ask Mora Abonner » (chat)
+  // Assistant « Mora Abonner » (chat)
   assistant: (message, history) =>
     ipcRenderer.invoke("vt:assistant", { message, history }),
 
   // Dossiers
   listFolders: () => ipcRenderer.invoke("vt:list-folders"),
   folderContent: (folderId) => ipcRenderer.invoke("vt:folder-content", folderId),
+  openFile: (folderId, name) => ipcRenderer.invoke("vt:open-file", { folderId, name }),
 
   // Téléchargements chiffrés hors-ligne
   downloadStates: () => ipcRenderer.invoke("vt:download-states"),
