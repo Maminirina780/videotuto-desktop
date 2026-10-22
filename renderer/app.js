@@ -431,7 +431,7 @@
       const row = document.createElement("div");
       row.className = "folder-row";
       const exp = f.expiresAt ? '<span class="fexp' + rouge(f.expiresAt) + '">' + esc(expiryLabel(f.expiresAt)) + "</span>" : "";
-      row.innerHTML = '<span class="fico">📁</span><span class="fname">' + esc(f.name) + "</span>" + exp + '<span style="color:var(--label3)">›</span>';
+      row.innerHTML = '<span class="fico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span class="fname">' + esc(f.name) + "</span>" + exp + '<span style="color:var(--label3)">›</span>';
       row.addEventListener("click", () => openFolder(f));
       box.appendChild(row);
     });
@@ -450,7 +450,7 @@
     (r.files || []).forEach((fi) => {
       const c = document.createElement("div");
       c.className = "folder-row file-card";
-      c.innerHTML = '<span class="fico">' + (/\.pdf$/i.test(fi.name) ? "📄" : "🗒") + '</span><span class="fname">' + esc(fi.name) + "</span>" +
+      c.innerHTML = '<span class="fico">' + (/\.pdf$/i.test(fi.name) ? '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>' : '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>') + '</span><span class="fname">' + esc(fi.name) + "</span>" +
         '<span class="fexp">' + esc(/\.pdf$/i.test(fi.name) ? "PDF" : "Fichier") + (fi.sizeBytes ? " · " + Math.max(1, Math.round(fi.sizeBytes / 1024)) + " Ko" : "") + "</span>";
       c.addEventListener("click", async () => {
         const o = window.vt.openFile ? await window.vt.openFile(f.id, fi.name) : { ok: false, error: "Mettez à jour Mora Video." };

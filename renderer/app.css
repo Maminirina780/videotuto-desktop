@@ -93,7 +93,8 @@ form input:focus{outline:0;border-color:var(--accent)}
 .folder-row .fname{font-weight:600;flex:1}
 .folder-row .fexp{font-size:12px;color:var(--label2);font-weight:600}
 .folder-row .fexp.rouge,.chip-exp.rouge{color:var(--red)}
-.file-card .fico{font-size:22px}
+.library .file-card{grid-column:1/-1}
+.fico{display:inline-flex;color:var(--accent)}.ico{width:22px;height:22px;flex:none}.ico.sm{width:13px;height:13px;vertical-align:-2px}
 .folder-head{display:flex;align-items:center;gap:14px;padding:16px 22px 0}
 .folder-head .folder-name{font-weight:600;font-size:17px}
 
