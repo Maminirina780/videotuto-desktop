@@ -30,7 +30,7 @@
       deleteDownload: async () => ({ ok: true }),
       checkUpdate: async () => ({ ok: true }),
       appInfo: async () => ({ version: "1.1.2", email: "demo@gmail.com" }),
-      abonner: async () => ({ ok: true, abonner: { nom: "Mora Abonner", slogan: "Services numériques à Madagascar", description: "Mora Abonner t'aide à commander en Chine, à apprendre avec des tutoriels vidéo en malgache et à réussir tes études.", facebook: "https://www.facebook.com/MoraAbonner", instagram: "", whatsapp: "261337247942", telephone: "+261337247942", email: "maminirinaprincy67@gmail.com", site: "https://mora-abonner-pages.pages.dev/", adresse: "Ivato, Antananarivo, Madagascar", horaires: "Réponse sur WhatsApp tous les jours" } }),
+      abonner: async () => ({ ok: true, abonner: { nom: "Mora Abonner", slogan: "Services numériques à Madagascar", description: "Mora Abonner t'aide à commander en Chine, à apprendre avec des tutoriels vidéo en malgache et à réussir tes études.", facebook: "https://www.facebook.com/MoraAbonner", instagram: "", whatsapp: "261337247942", telephone: "+261337247942", email: "maminirinaprincy67@gmail.com", site: "https://moraformation.pages.dev/", adresse: "Ivato, Antananarivo, Madagascar", horaires: "Réponse sur WhatsApp tous les jours" } }),
       openExternal: async () => ({ ok: true }),
       onDownloadProgress: () => () => {},
       listImages: async () => ({ ok: true, images: [

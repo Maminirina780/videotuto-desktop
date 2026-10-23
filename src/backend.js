@@ -455,7 +455,7 @@ const ABONNER_DEFAUT = {
   telephone: "+261337247942",
   email: "maminirinaprincy67@gmail.com",
   adresse: "Ivato, Antananarivo, Madagascar",
-  site: "https://mora-abonner-pages.pages.dev/",
+  site: "https://moraformation.pages.dev/",
   horaires: "Réponse sur WhatsApp tous les jours",
 };
 
