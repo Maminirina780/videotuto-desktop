@@ -39,6 +39,12 @@ contextBridge.exposeInMainWorld("vt", {
 
   // Mise à jour du logiciel (vérification manuelle)
   checkUpdate: () => ipcRenderer.invoke("vt:check-update"),
+  appInfo: () => ipcRenderer.invoke("vt:app-info"),
+
+  // Fiche « À propos de Mora Abonner » (reseau=false : cache/défaut immédiat)
+  abonner: (reseau) => ipcRenderer.invoke("vt:abonner", !!reseau),
+  // Ouvre un lien https:, mailto: ou tel: hors de l'app (vérifié côté main)
+  openExternal: (url) => ipcRenderer.invoke("vt:open-external", url),
 
   // Progression des téléchargements (abonnement)
   onDownloadProgress: (cb) => {

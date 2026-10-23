@@ -178,5 +178,18 @@ if (!gotLock) {
     });
     ipcMain.handle("vt:cancel-download", (_e, videoKey) => backend.cancelDownload(videoKey));
     ipcMain.handle("vt:check-update", () => updater.checkForUpdates(mainWindow, { silent: false }));
+
+    // Fiche « À propos de Mora Abonner » + version de l'app.
+    ipcMain.handle("vt:abonner", (_e, reseau) => backend.abonnerFiche(!!reseau));
+    ipcMain.handle("vt:app-info", () => backend.appInfo());
+    // Liens de contact : ouverts dans le navigateur / l'appli système, et
+    // SEULEMENT pour https:, mailto: et tel: (wa.me passe par https).
+    ipcMain.handle("vt:open-external", async (_e, url) => {
+      let u;
+      try { u = new URL(String(url || "")); } catch (_) { return { ok: false, error: "Lien invalide." }; }
+      if (!["https:", "mailto:", "tel:"].includes(u.protocol)) return { ok: false, error: "Lien refusé." };
+      try { await shell.openExternal(u.href); return { ok: true }; }
+      catch (_) { return { ok: false, error: "Impossible d'ouvrir le lien." }; }
+    });
   }
 }

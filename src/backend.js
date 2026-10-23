@@ -439,7 +439,70 @@ async function downloadFolderFile(folderId, name) {
   }
 }
 
+// ── Fiche « À propos de Mora Abonner » (commune à toutes les apps Mora) ──
+// Publique, modifiable par l'admin dans Mora Ship. Le renderer ne peut pas
+// faire de requête externe (CSP connect-src 'self') : on la récupère ici, on
+// la garde en cache dans userData/abonner.json, et on retombe sur les valeurs
+// par défaut ci-dessous hors ligne. Une valeur vide = ligne masquée.
+const ABONNER_URL = "https://mora-ship.pages.dev/api/abonner";
+const ABONNER_DEFAUT = {
+  nom: "Mora Abonner",
+  slogan: "",
+  description: "",
+  facebook: "https://www.facebook.com/MoraAbonner",
+  instagram: "",
+  whatsapp: "261337247942",
+  telephone: "+261337247942",
+  email: "maminirinaprincy67@gmail.com",
+  adresse: "Ivato, Antananarivo, Madagascar",
+  site: "https://mora-abonner-pages.pages.dev/",
+  horaires: "Réponse sur WhatsApp tous les jours",
+};
+
+// Ne garde que les champs connus, en texte ; un champ absent reprend la valeur par défaut.
+function ficheNettoyee(src) {
+  const out = {};
+  for (const k of Object.keys(ABONNER_DEFAUT)) {
+    const v = src && src[k];
+    out[k] = typeof v === "string" ? v.trim().slice(0, 2000) : ABONNER_DEFAUT[k];
+  }
+  return out;
+}
+
+// reseau=false → cache (ou défaut) immédiat ; reseau=true → API, puis cache en repli.
+async function abonnerFiche(reseau) {
+  const f = cfg("abonner.json");
+  const lireCache = () => {
+    try { return { ok: true, source: "cache", abonner: ficheNettoyee(JSON.parse(fs.readFileSync(f, "utf8")).abonner) }; }
+    catch { return { ok: true, source: "defaut", abonner: { ...ABONNER_DEFAUT } }; }
+  };
+  if (!reseau) return lireCache();
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const res = await fetch(ABONNER_URL, { signal: ctl.signal, headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!data || !data.abonner || typeof data.abonner !== "object") throw new Error("format");
+    const abonner = ficheNettoyee(data.abonner);
+    try { fs.writeFileSync(f, JSON.stringify({ abonner, at: Date.now() })); } catch {}
+    return { ok: true, source: "reseau", abonner };
+  } catch {
+    return lireCache();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+// Version de l'app (affichée dans Compte et À propos).
+function appInfo() {
+  loadSession();
+  return { version: app.getVersion(), email: EMAIL || null };
+}
+
 module.exports = {
+  abonnerFiche,
+  appInfo,
   downloadFolderFile,
   login,
   loginWithGoogle,

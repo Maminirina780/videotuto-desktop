@@ -29,6 +29,9 @@
       cancelDownload: async () => ({ ok: true }),
       deleteDownload: async () => ({ ok: true }),
       checkUpdate: async () => ({ ok: true }),
+      appInfo: async () => ({ version: "1.1.2", email: "demo@gmail.com" }),
+      abonner: async () => ({ ok: true, abonner: { nom: "Mora Abonner", slogan: "Services numériques à Madagascar", description: "Mora Abonner t'aide à commander en Chine, à apprendre avec des tutoriels vidéo en malgache et à réussir tes études.", facebook: "https://www.facebook.com/MoraAbonner", instagram: "", whatsapp: "261337247942", telephone: "+261337247942", email: "maminirinaprincy67@gmail.com", site: "https://mora-abonner-pages.pages.dev/", adresse: "Ivato, Antananarivo, Madagascar", horaires: "Réponse sur WhatsApp tous les jours" } }),
+      openExternal: async () => ({ ok: true }),
       onDownloadProgress: () => () => {},
       listImages: async () => ({ ok: true, images: [
         { imageKey: "images/1784000000000-schema-reseau.png", title: "Schema reseau", expiresAt: null },
@@ -350,12 +353,60 @@
     show("library");
   });
 
-  // ── Onglets Vidéos / Images / Dossiers ──
-  let imagesLoaded = false, foldersLoaded = false;
+
+  // ── À propos de Mora Abonner ──
+  // Fiche commune aux apps Mora (réglée dans Mora Admin) : cache immédiat, puis réseau.
+  const AB_ICO = {"facebook":"<path d=\"M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z\"/>","instagram":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/><circle cx=\"17.5\" cy=\"6.5\" r=\"1\"/>","whatsapp":"<path d=\"M3 21l1.7-5A8.5 8.5 0 1 1 8 19.4L3 21z\"/><path d=\"M9 9.5c.3 2.2 2.3 4.2 4.5 4.5l1.2-1.2 2 .8v1.6c-4 .5-8.5-4-8-8h1.6l.8 2-1.1 1.2\"/>","appel":"<path d=\"M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2\"/>","mail":"<rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 7 9 6 9-6\"/>","web":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18\"/>","adresse":"<path d=\"M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z\"/><circle cx=\"12\" cy=\"9.5\" r=\"2.5\"/>","horaires":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>"};
+  const chiffres = (s) => { const d = String(s || "").replace(/\D/g, ""); return d.length >= 9 && d.length <= 15 ? d : null; };
+  // 261337247942 → « 033 72 479 42 »
+  const numeroLocal = (d) => { const l = d.startsWith("261") && d.length === 12 ? "0" + d.slice(3) : d; return l.length === 10 ? l.replace(/(\d{3})(\d{2})(\d{3})(\d{2})/, "$1 $2 $3 $4") : "+" + d; };
+  const sansSchema = (u) => u.replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "");
+  const https = (u) => { try { const x = new URL(String(u || "").trim()); return x.protocol === "https:" ? x.href : null; } catch (_) { return null; } };
+
+  function ligneAb(ico, titre, valeur, lien) {
+    const el = document.createElement(lien ? "button" : "div");
+    el.className = "ab-ligne";
+    el.innerHTML = '<span class="ab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AB_ICO[ico] + '</svg></span><span class="ab-txt"><b></b><span></span></span>' + (lien ? '<span class="ab-ext" aria-hidden="true">↗</span>' : "");
+    el.querySelector("b").textContent = titre;
+    el.querySelector(".ab-txt span").textContent = valeur;
+    if (lien) {
+      el.type = "button";
+      el.title = lien;
+      el.addEventListener("click", async () => { const r = await window.vt.openExternal(lien); if (!r || !r.ok) toast((r && r.error) || "Impossible d'ouvrir le lien.", true); });
+    }
+    return el;
+  }
+
+  function afficherAbonner(f) {
+    $("abNom").textContent = f.nom || "Mora Abonner";
+    $("abSlogan").textContent = f.slogan || "";
+    $("abSlogan").hidden = !f.slogan;
+    $("abDesc").textContent = f.description || "";
+    $("abDesc").hidden = !f.description;
+    const box = $("abListe"); box.innerHTML = "";
+    const fb = https(f.facebook); if (fb) box.appendChild(ligneAb("facebook", "Facebook", sansSchema(fb), fb));
+    const ig = https(f.instagram); if (ig) box.appendChild(ligneAb("instagram", "Instagram", sansSchema(ig), ig));
+    const wa = chiffres(f.whatsapp); if (wa) box.appendChild(ligneAb("whatsapp", "WhatsApp", numeroLocal(wa), "https://wa.me/" + wa));
+    const tel = chiffres(f.telephone); if (tel) box.appendChild(ligneAb("appel", "Appeler", numeroLocal(tel), "tel:+" + tel));
+    const em = String(f.email || "").trim(); if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) box.appendChild(ligneAb("mail", "E-mail", em, "mailto:" + em));
+    const site = https(f.site); if (site) box.appendChild(ligneAb("web", "Site web", sansSchema(site), site));
+    if (f.adresse) box.appendChild(ligneAb("adresse", "Adresse", f.adresse, "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(f.adresse)));
+    if (f.horaires) box.appendChild(ligneAb("horaires", "Horaires", f.horaires, null));
+  }
+
+  async function loadApropos() {
+    try { const r = await window.vt.abonner(false); if (r && r.abonner) afficherAbonner(r.abonner); } catch (_) {}
+    try { const i = await window.vt.appInfo(); $("abVersion").textContent = "Mora Video pour Windows · version " + i.version; } catch (_) {}
+    try { const r = await window.vt.abonner(true); if (r && r.abonner) afficherAbonner(r.abonner); } catch (_) {}
+  }
+
+  // ── Onglets Vidéos / Images / Dossiers / À propos ──
+  let imagesLoaded = false, foldersLoaded = false, aproposLoaded = false;
 
   function switchTab(name) {
     document.querySelectorAll("#tabs .tab").forEach((t) => t.classList.toggle("on", t.dataset.tab === name));
-    ["videos", "images", "folders"].forEach((p) => { $("panel-" + p).hidden = p !== name; });
+    ["videos", "images", "folders", "apropos"].forEach((p) => { $("panel-" + p).hidden = p !== name; });
+    if (name === "apropos" && !aproposLoaded) { aproposLoaded = true; loadApropos(); }
     if (name === "images" && !imagesLoaded) { imagesLoaded = true; loadImages(); }
     if (name === "folders" && !foldersLoaded) { foldersLoaded = true; loadFolders(); }
   }
@@ -371,7 +422,6 @@
     try { const r = await window.vt.listFolders(); hasFolders = r.ok && (r.folders || []).length > 0; } catch (_) {}
     $("tabImages").hidden = !hasImages;
     $("tabFolders").hidden = !hasFolders;
-    $("tabs").hidden = !(hasImages || hasFolders);
     // pas de vidéo hors dossier (ex. acheteur Mora Ship) : on ouvre directement les dossiers
     switchTab(hasFolders && !$("library").children.length ? "folders" : "videos");
   }
@@ -444,7 +494,9 @@
     const r = await window.vt.folderContent(f.id);
     if (!r.ok) { toast(r.error || "Dossier indisponible.", true); return; }
     const reload = () => openFolder(f);
-    (r.videos || []).forEach((v) => renderCard(v, items, reload));
+    // ordre des leçons : « base 1, base 2 … base 10 » (tri naturel sur le titre)
+    (r.videos || []).slice().sort((a, b) => String(a.title || a.videoKey).localeCompare(String(b.title || b.videoKey), "fr", { numeric: true, sensitivity: "base" }))
+      .forEach((v) => renderCard(v, items, reload));
     (r.images || []).forEach((im) => renderImageCard(im, items));
     // PDF (cours, fiches) et autres fichiers : ouverts dans une fenêtre protégée
     (r.files || []).forEach((fi) => {

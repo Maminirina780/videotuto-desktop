@@ -16,7 +16,7 @@
   <section id="loginView" class="view login">
     <div class="login-card">
       <div class="brand">
-        <span class="logo" aria-hidden="true"><span class="mv" aria-hidden="true"><b>M</b><i>V</i></span></span>
+        <span class="logo" aria-hidden="true"><img src="img/mora-video.png" alt="" /></span>
         <div>
           <h1>Mora <em>Video</em></h1>
           <p class="muted">Tutoriels vidéo et PDF en malgache. Connecte-toi avec le même compte Google que sur Mora Ship.</p>
@@ -42,7 +42,7 @@
   <!-- ═══════════ BIBLIOTHÈQUE ═══════════ -->
   <section id="libraryView" class="view" hidden>
     <header class="topbar">
-      <span class="logo sm" aria-hidden="true"><span class="mv" aria-hidden="true"><b>M</b><i>V</i></span></span>
+      <span class="logo sm" aria-hidden="true"><img src="img/mora-video.png" alt="" /></span>
       <h2>Mes tutoriels</h2>
       <span class="secure-badge" title="Fenêtre protégée : capture d'écran et enregistrement bloqués"><svg class="ico sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Protégé</span>
       <span class="spacer"></span>
@@ -55,10 +55,12 @@
       <button class="btn ghost small" id="logoutBtn">Déconnexion</button>
     </header>
 
-    <nav class="tabs" id="tabs" hidden>
+    <nav class="tabs" id="tabs">
       <button class="tab on" data-tab="videos">Vidéos</button>
       <button class="tab" data-tab="images" id="tabImages" hidden>Images</button>
       <button class="tab" data-tab="folders" id="tabFolders" hidden>Dossiers</button>
+      <span class="spacer"></span>
+      <button class="tab" data-tab="apropos" id="tabApropos">À propos</button>
     </nav>
 
     <!-- Onglet Vidéos -->
@@ -85,6 +87,29 @@
           <span class="folder-name" id="folderName"></span>
         </div>
         <div class="library" id="folderItems"></div>
+      </div>
+    </div>
+
+    <!-- Onglet À propos de Mora Abonner (fiche réglée dans Mora Admin) -->
+    <div class="panel" id="panel-apropos" hidden>
+      <div class="apropos">
+        <div class="ab-carte">
+          <img class="ab-logo" src="img/mora-abonner.png" alt="" />
+          <div>
+            <p class="ab-sur">À propos de</p>
+            <h3 id="abNom">Mora Abonner</h3>
+            <p class="ab-slogan" id="abSlogan"></p>
+          </div>
+        </div>
+        <p class="ab-desc" id="abDesc"></p>
+        <div class="ab-liste" id="abListe"></div>
+        <p class="ab-titre">La famille Mora</p>
+        <div class="ab-apps">
+          <div class="ab-app"><img src="img/mora-ship.png" alt="" /><b>Mora Ship</b><span>Commandes en Chine, paiement en ariary</span></div>
+          <div class="ab-app"><img src="img/mora-video.png" alt="" /><b>Mora Video</b><span>Tutoriels vidéo et PDF en malgache</span></div>
+          <div class="ab-app"><img src="img/mora-info.png" alt="" /><b>Mora Info</b><span>Réussir ses études</span></div>
+        </div>
+        <p class="ab-version" id="abVersion"></p>
       </div>
     </div>
   </section>
