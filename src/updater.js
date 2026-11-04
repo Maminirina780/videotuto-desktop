@@ -4,7 +4,7 @@
 // télécharge l'installateur .exe puis on le lance ; le logiciel se ferme
 // pendant l'installation.
 
-const { app, dialog, shell, BrowserWindow } = require("electron");
+const { app, dialog, shell, BrowserWindow, Notification } = require("electron");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -61,6 +61,9 @@ async function downloadInstaller(win, onProgress) {
  * OBLIGATOIRE est en attente et n'a pas été installée (l'appelant doit alors
  * bloquer / quitter).
  */
+/** dernière version facultative déjà proposée (pour ne pas la reproposer toutes les 2 h) */
+let dejaProposee = null;
+
 async function checkForUpdates(win, { silent = false } = {}) {
   let latest;
   try {
@@ -82,13 +85,27 @@ async function checkForUpdates(win, { silent = false } = {}) {
   }
 
   const mandatory = latest.mandatory !== false;
+  // vérification automatique (toutes les 2 h) : une mise à jour facultative n'est proposée qu'une fois
+  if (silent && !mandatory && dejaProposee === latest.version) return false;
+  dejaProposee = latest.version;
+  // notification Windows (centre de notifications) : visible même si la fenêtre est réduite
+  if (silent && Notification.isSupported()) {
+    const n = new Notification({
+      title: mandatory ? "Mise à jour obligatoire : Mora Video " + latest.version : "Nouvelle version : Mora Video " + latest.version,
+      body: mandatory
+        ? "Installe la nouvelle version pour continuer à regarder tes vidéos."
+        : "Une nouvelle version est prête à être installée.",
+    });
+    n.on("click", () => { if (win && !win.isDestroyed()) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); } });
+    n.show();
+  }
   const choice = dialog.showMessageBoxSync(win, {
     type: mandatory ? "warning" : "info",
     title: mandatory ? "Mise à jour requise" : "Mise à jour disponible",
     message:
       "La version " + latest.version + " est disponible (vous avez la " + current + ").",
     detail: mandatory
-      ? "Vous devez installer cette mise à jour pour continuer à utiliser VideoTuto."
+      ? "Vous devez installer cette mise à jour pour continuer à utiliser Mora Video."
       : "Voulez-vous la télécharger et l'installer maintenant ?",
     buttons: mandatory ? ["Mettre à jour", "Quitter"] : ["Mettre à jour", "Plus tard"],
     defaultId: 0,

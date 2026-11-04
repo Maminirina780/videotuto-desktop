@@ -109,12 +109,18 @@ if (!gotLock) {
       // obligatoire télécharge/installe et ferme le logiciel ; une facultative
       // laisse le choix. Silencieux s'il n'y a rien de neuf.
       updater.checkForUpdates(mainWindow, { silent: true }).catch(() => {});
+      // puis toutes les 2 h tant que le logiciel reste ouvert (notification Windows + fenêtre)
+      setInterval(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) updater.checkForUpdates(mainWindow, { silent: true }).catch(() => {});
+      }, 2 * 60 * 60 * 1000);
     });
 
     mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
   }
 
   app.whenReady().then(() => {
+    // Windows : même identifiant que l'installateur (appId), sinon les notifications ne s'affichent pas.
+    if (process.platform === "win32") app.setAppUserModelId("com.vmp.videotuto.desktop");
     // Enregistre le protocole de lecture chiffrée hors-ligne.
     media.register();
     // Enregistre les canaux IPC (login, liste, lecture, téléchargements…).
